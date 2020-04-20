@@ -1,0 +1,260 @@
+---
+title: "Statistics Project"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+library(vegan) 
+library(moments)
+library(stats)
+library(car)
+library(MASS)
+install.packages("VIF")
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+library(vegan) 
+library(moments)
+library(stats)
+library(car)
+library(MASS)
+library(vcd)
+```
+
+
+```{r}
+setwd("/Users/nicolegotkowski/NicoleGotkowski/BioStats")
+my.data=read.csv("StreamAssessmentData.csv")
+head(my.data)
+names(my.data)
+dim(my.data)
+View(my.data)
+```
+```{r}
+my.data[, 2] <- as.numeric( my.data[, 2] )
+my.data[, 3] <- as.numeric( my.data[, 3] )
+my.data[, 4] <- as.numeric(my.data[, 4] )
+my.data[, 5] <- as.numeric( my.data[, 5])
+my.data[, 6] <- as.numeric(my.data[, 6] )
+my.data[, 7] <- as.numeric( my.data[, 7] )
+my.data[, 8] <- as.numeric( my.data[, 8] )
+my.data[, 9] <- as.numeric( my.data[, 9] )
+my.data[, 10] <- as.numeric( my.data[, 10] )
+my.data[, 11] <- as.numeric( my.data[, 11] )
+
+```
+
+
+
+```{r}
+#Descriptive statsitics 
+summary(my.data)
+```
+
+####Part 1: Determining if varaibles are linear and normal in order to meet the assumptions required for a linear regression, and furthermore a PCA 
+
+
+```{r}
+####First step 
+library(popbio)
+##########NH3
+#Decomp by NH3
+NH3plot=plot(my.data[,2], my.data[,11], main = "Decomposition by NH3", xlab = "NH3 levels", ylab = "Rate of Decomposition")
+#Somewhat Linear
+#Normality
+qqnorm(my.data[,2])
+qqline(my.data[,2])
+#Not very normal
+shapiro.test(my.data[,2])   
+#not normal
+
+#NH3 will not be used
+```
+
+
+```{r}
+
+######Decomp by NO2.NO3
+plot(my.data[,3], my.data[,11], main = "Decomposition by NO2.NO3", xlab = "NH3 levels", ylab = "Rate of Decomposition")
+#Very not linear
+qqnorm(my.data[,3])
+qqline(my.data[,3])
+#Definitely not normal
+shapiro.test(my.data[,3]) 
+#NOT NORMAL 
+#NO2.NO3 will not be used
+```
+
+```{r}
+#####Decomp by TN 
+plot(my.data[,4], my.data[,11], main = "Decomposition by TN", xlab = "TN levels", ylab = "Rate of Decomposition")
+#Somewhat linear relationship 
+qqnorm(my.data[,4])
+qqline(my.data[,4])
+#Normal
+shapiro.test(my.data[,4])
+#Normal
+#homoscedastic
+
+
+#TN will be used
+```
+
+
+```{r}
+######Decomp by SRP
+plot(my.data[,5], my.data[,11], main = "Decomposition by SRP", xlab = "SRP levels", ylab = "Rate of Decomposition")
+#Somewhat linear relationship
+qqnorm(my.data[,5])
+qqline(my.data[,5])
+#normal
+shapiro.test(my.data[,5])
+#normal
+
+####SRP will be used
+```
+
+```{r}
+######Decomp BY TP
+plot(my.data[,6], my.data[,11], main = "Decomposition by TP", xlab = "TP levels", ylab = "Rate of Decomposition")
+#Could have a linear relationship 
+qqnorm(my.data[,6])
+qqline(my.data[,6])
+# normal
+shapiro.test(my.data[,6]) 
+#normal
+
+###TP will be used
+```
+
+```{r}
+######Decomp by TDP
+my.data[, 7] <- as.numeric(as.character( my.data[, 7] ))
+plot(my.data[,7], my.data[,11], main = "Decomposition by TDP", xlab = "TP levels", ylab = "Rate of Decomposition")
+#linear
+qqnorm(my.data[,7])
+qqline(my.data[,7])
+#normal
+shapiro.test(my.data[,7]) 
+#normal
+
+###TDP will be used
+```
+
+
+```{r}
+######Decomp by Temp
+plot(my.data[,8], my.data[,11], main = "Decomposition by Temp", xlab = "Temp", ylab = "Rate of Decomposition")
+#somewhat linear
+qqnorm(my.data[,8])
+qqline(my.data[,8])
+#normal
+shapiro.test(my.data[,8])
+#normal
+###Temp will be used
+```
+
+```{r}
+#######Decomp by pH
+plot(my.data[,9], my.data[,11], main = "Decomposition by pH", xlab = "pH", ylab = "Rate of Decomposition")
+#Somewhat linear
+qqnorm(my.data[,9])
+qqline(my.data[,9])
+#normal
+shapiro.test(my.data[,9])
+#normal
+#pH will be used
+```
+
+```{r}
+#Decomp by Conducitivity 
+plot(my.data[,10], my.data[,11], main = "Decomposition by Conductivity", xlab = "Conductivity", ylab = "Rate of Decomposition")
+#Doesn't seem linear
+
+qqnorm(my.data[,10])
+qqline(my.data[,10])
+#normal
+shapiro.test(my.data[,10])
+#normal
+###Conducitivty will be used
+```
+
+```{r}
+#new data set with normal/linear values
+setwd("/Users/nicolegotkowski/NicoleGotkowski/BioStats")
+my.datax=read.csv("SAnormal.csv")
+head(my.datax)
+names(my.datax)
+dim(my.datax)
+View(my.datax)
+row.names(my.datax)=my.datax[,1]; my.datax[,1]<-NULL
+my.datax[,1]=as.numeric(my.datax[,1])
+my.datax[, 2] <- as.numeric( my.datax[, 2] )
+my.datax[, 3] <- as.numeric( my.datax[, 3] )
+my.datax[, 4] <- as.numeric(my.datax[, 4] )
+my.datax[, 5] <- as.numeric( my.datax[, 5])
+my.datax[, 6] <- as.numeric(my.datax[, 6] )
+my.datax[, 7] <- as.numeric( my.datax[, 7] )
+my.datax[, 8] <- as.numeric( my.datax[, 8] )
+
+```
+
+
+```{r}
+#9.  Multiple regression
+#A. Model with 8 predictor variables
+model0=lm(Rate ~  TN + SRP + TP + TDP + Temp + pH + Conductivity, data = my.data)
+summary(model0)
+AIC(model0)
+vif(model0)
+
+
+#No significant predictor variables 
+```
+
+```{r}
+#Automatic Seletion
+library(popbio)
+library(bestglm)
+model1<-glm(Rate~TN+SRP+TP+TDP+Temp+pH+Conductivity, data=my.datax)
+plot(model1)
+summary.lm(model1)
+
+```
+
+```{r}
+#Purposeful Selection
+univariate.TN=glm(Rate~TN, data=my.datax, family=binomial(link="logit"))
+summary(univariate.TN)
+univariate.SRP=glm(Rate~SRP, data=my.datax, family=binomial(link="logit"))
+summary(univariate.SRP)
+univariate.TP=glm(Rate~TP, data=my.datax, family=binomial(link="logit"))
+summary(univariate.TP)
+univariate.TDP=glm(Rate~TDP, data=my.datax, family=binomial(link="logit"))
+summary(univariate.TDP)
+univariate.Temp=glm(Rate~Temp, data=my.datax, family=binomial(link="logit"))
+summary(univariate.Temp)
+univariate.pH=glm(Rate~pH, data=my.datax, family=binomial(link="logit"))
+summary(univariate.pH)
+univariate.Conductivity=glm(Rate~Conductivity, data=my.datax, family=binomial(link="logit"))
+summary(univariate.Conductivity)
+#Only SRP is significant 
+```
+
+```{r}
+#Based on the results of purposeful and automatic selection, the only important variable for the regression is SRP, since it had a p-value <0.25
+```
+

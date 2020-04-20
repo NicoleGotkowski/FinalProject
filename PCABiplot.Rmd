@@ -1,0 +1,242 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+library(devtools)
+install_github("kassambara/factoextra")
+library(factoextra)
+library(vegan)
+library(chemometrics)
+library(ggplot2)
+library(cluster)
+```
+
+
+```{r}
+setwd("/Users/nicolegotkowski/NicoleGotkowski/Biostats")
+my.data=read.csv("StreamAssessmentData.csv",stringsAsFactors=F)
+sitestatus=read.csv("sitestatus.csv")
+head(my.data)
+names(my.data)
+dim(my.data)
+View(my.data)
+```
+
+
+```{r}
+my.data[, 2] <- as.numeric( my.data[, 2] )
+my.data[, 3] <- as.numeric( my.data[, 3] )
+my.data[, 4] <- as.numeric(my.data[, 4] )
+my.data[, 5] <- as.numeric( my.data[, 5])
+my.data[, 6] <- as.numeric(my.data[, 6] )
+my.data[, 7] <- as.numeric( my.data[, 7] )
+my.data[, 8] <- as.numeric( my.data[, 8] )
+my.data[, 9] <- as.numeric( my.data[, 9] )
+my.data[, 10] <- as.numeric(my.data[, 10] )
+my.data[, 11] <- as.numeric(my.data[, 11] )
+my.data[,1] <-as.character(my.data[,1])
+```
+
+####Part 1: Determining if variables are normal to conduct a PCA 
+
+
+```{r}
+####First step - testing normality. If P<0.05, data are not normally distributed)
+library(popbio)
+##########NH3
+qqnorm(my.data[,2])
+qqline(my.data[,2])
+#Not very normal
+shapiro.test(my.data[,2])   
+#not normal
+
+#NH3 will not be used
+```
+
+
+```{r}
+
+######NO2.NO3
+qqnorm(my.data[,3])
+qqline(my.data[,3])
+#Definitely not normal
+shapiro.test(my.data[,3]) 
+#not normal
+#NO2.NO3 will not be used
+```
+
+```{r}
+#####TN 
+qqnorm(my.data[,4])
+qqline(my.data[,4])
+#Normal
+shapiro.test(my.data[,4])
+#Normal
+#TN will be used
+```
+
+
+```{r}
+###### SRP
+qqnorm(my.data[,5])
+qqline(my.data[,5])
+#normal
+shapiro.test(my.data[,5])
+#normal
+View(my.data[5])
+
+####SRP will be used
+```
+
+```{r}
+######TP
+qqnorm(my.data[,6])
+qqline(my.data[,6])
+# normal
+shapiro.test(my.data[,6]) 
+#normal
+
+#TP will be used
+```
+
+```{r}
+###### TDP
+qqnorm(my.data[,7])
+qqline(my.data[,7])
+#normal
+shapiro.test(my.data[,7]) 
+#normal
+###TDP will be used
+```
+
+
+```{r}
+######Temp
+qqnorm(my.data[,8])
+qqline(my.data[,8])
+#normal
+shapiro.test(my.data[,8])
+#normal
+###Temp will be used
+```
+
+```{r}
+####### pH
+qqnorm(my.data[,9])
+qqline(my.data[,9])
+#normal
+shapiro.test(my.data[,9])
+#normal
+#pH will be used
+```
+
+
+```{r}
+#Conducitivity 
+qqnorm(my.data[,10])
+qqline(my.data[,10])
+#normal
+shapiro.test(my.data[,10])
+#normal
+###Conducitivty will be used
+```
+
+```{r}
+#Decomp Rate
+
+qqnorm(my.data[,11])
+qqline(my.data[,11])
+#normal
+shapiro.test(my.data[,11])
+#normal
+###Decomp rate will be used
+```
+
+```{r}
+setwd("~/NicoleGotkowski/BioStats")
+my.data1=read.csv("SAnormal.csv")
+#Making the data Numeric 
+row.names(my.data1)=my.data1[,1]; my.data1[,1]<-NULL
+
+my.data1[,1] <- as.numeric(my.data1[,1])
+my.data1[, 2] <- as.numeric( my.data1[, 2] )
+my.data1[, 3] <- as.numeric( my.data1[, 3] )
+my.data1[, 4] <- as.numeric(my.data1[, 4] )
+my.data1[, 5] <- as.numeric( my.data1[, 5])
+my.data1[, 6] <- as.numeric(my.data1[, 6] )
+my.data1[, 7] <- as.numeric( my.data1[, 7] )
+my.data1[, 8] <- as.numeric( my.data1[, 8] )
+#Normally distubuted data were included in the PCA
+```
+
+
+```{r}
+head(my.data1)
+names(my.data1)
+dim(my.data1)
+View(my.data1)
+```
+
+
+```{r}
+z<-decostand(my.data1,"hell", na.rm=TRUE)
+fit <- prcomp(z)
+```
+
+```{r}
+#Biplot
+fviz_pca_biplot(fit,habillage=sitestatus$Land.Cover,title = "PCA - Biplot")
+```
+
+
+```{r}
+screeplot(fit)
+#Based on this graph, only PC1 is worth keeping
+```
+
+
+```{r}
+#explained variance for each variable.
+#a is number of components
+?pcaVarexpl
+pcaVarexpl(X=z, a=1)
+names(z)
+```
+
+
+```{r}
+?pcaCV
+pcaCV(z,8,center=T, scale=T)
+```
+
+```{r}
+#Outliers?
+fit<-princomp(z)
+pcaDiagplot(z,fit,a=1)
+```
